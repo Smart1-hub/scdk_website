@@ -1,0 +1,21 @@
+{
+  "name": "scdk-full",
+  "version": "3.0.0",
+  "private": true,
+  "description": "SCDK — Public Website + Enterprise Smart City Platform (unified)",
+  "scripts": {
+    "install:all":  "cd frontend && npm install && cd ../backend && npm install && cd ../mobile && npm install",
+    "dev":          "concurrently \"npm run backend\" \"npm run frontend\"",
+    "frontend":     "cd frontend && npm start",
+    "backend":      "cd backend && npm run dev",
+    "mobile":       "cd mobile && npx expo start",
+    "build":        "cd frontend && npm run build",
+    "docker:up":   "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "db:migrate":   "psql -U scdk_user -d scdk_platform -f database/migrations/001_initial_schema.sql",
+    "db:seed":      "psql -U scdk_user -d scdk_platform -f database/seeds/001_seed_data.sql"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,100 @@
+
+services:
+
+  # ── PostgreSQL + PostGIS ──────────────────────────────────────────────────
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: scdk_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       scdk_platform
+      POSTGRES_USER:     scdk_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ../../database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scdk_user -d scdk_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MQTT Broker (Mosquitto) ───────────────────────────────────────────────
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: scdk_mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mqtt_data:/mosquitto/data
+      - mqtt_logs:/mosquitto/log
+
+  # ── Backend API ───────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: ../infrastructure/docker/Dockerfile.backend
+    container_name: scdk_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    environment:
+      NODE_ENV:            production
+      PORT:                5001
+      DB_HOST:             db
+      DB_PORT:             5433
+      DB_NAME:             scdk_platform
+      DB_USER:             scdk_user
+      DB_PASSWORD:         ${DB_PASSWORD}
+      JWT_SECRET:          ${JWT_SECRET}
+      JWT_REFRESH_SECRET:  ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN:      15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      ANTHROPIC_API_KEY:   ${ANTHROPIC_API_KEY}
+      MQTT_BROKER_URL:     mqtt://mqtt:1883
+      ALLOWED_ORIGINS:     ${ALLOWED_ORIGINS}
+    ports:
+      - "5001:5000"
+    volumes:
+      - uploads:/app/uploads
+
+  # ── Frontend (React built + served by nginx) ──────────────────────────────
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
+    container_name: scdk_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # ── Nginx Reverse Proxy ───────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: scdk_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/ssl:/etc/nginx/ssl:ro
+
+volumes:
+  db_data:
+  mqtt_data:
+  mqtt_logs:
+  uploads:

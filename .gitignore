@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+mobile/node_modules/
+
+# Builds
+frontend/build/
+mobile/.expo/
+mobile/dist/
+
+# Environment — NEVER commit
+.env
+backend/.env
+infrastructure/docker/.env
+
+# Uploads
+backend/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Tests
+coverage/
+
+# SSL
+infrastructure/nginx/ssl/
