@@ -59,6 +59,6 @@ export const HERO_STATS = [
 
 export const CONTACT_INFO = [
   { icon:"🌐", label:"Website", val:"www.scdk.io"       },
-  { icon:"📧", label:"Email",   val:"hello@scdk.io"     },
-  { icon:"📞", label:"Phone",   val:"+1 (800) SCDK-100" },
+  { icon:"📧", label:"Email",   val:"scdk@yahoo.com"     },
+  { icon:"📞", label:"Phone",   val:"+234 902 9661 645" },
 ];
